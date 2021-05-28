@@ -4,6 +4,7 @@ from ConfigSpace.hyperparameters import CategoricalHyperparameter, \
 from pyspark.ml.clustering import KMeans as KMeans_spark
 from pyspark.ml.clustering import GaussianMixture as GaussianMixture_spark
 from pyspark.ml.clustering import BisectingKMeans as BisectingKMeans_spark
+from .custom_algorithms import CustomPowerIterationClustering
 
 from smac.configspace import ConfigurationSpace
 
@@ -27,10 +28,15 @@ class ClusteringArmThread:
             self.configuration_space.add_hyperparameters(self.get_kmeans_configspace(self.n_clusters_upper_bound))
 
         elif algorithm_name == Constants.gm_algo:
-            self.configuration_space.add_hyperparameters(self.get_gaussian_mixture_configspace(self.n_clusters_upper_bound))
+            self.configuration_space.add_hyperparameters(
+                self.get_gaussian_mixture_configspace(self.n_clusters_upper_bound))
 
         elif algorithm_name == Constants.bisecting_kmeans:
-            self.configuration_space.add_hyperparameters(self.get_bisecting_kmeans_configspace(self.n_clusters_upper_bound))
+            self.configuration_space.add_hyperparameters(
+                self.get_bisecting_kmeans_configspace(self.n_clusters_upper_bound))
+
+        elif algorithm_name == Constants.fully_connected_pic:
+            self.configuration_space.add_hyperparameters(self.get_pic_configspace(self.n_clusters_upper_bound))
 
     def update_labels(self, configuration):
         if self.algorithm_name == Constants.kmeans_algo:
@@ -39,14 +45,15 @@ class ClusteringArmThread:
             algorithm = GaussianMixture_spark(predictionCol='labels', **configuration)
         elif self.algorithm_name == Constants.bisecting_kmeans:
             algorithm = BisectingKMeans_spark(predictionCol='labels', **configuration)
+        elif self.algorithm_name == Constants.fully_connected_pic:
+            algorithm = CustomPowerIterationClustering(predictionCol='labels', **configuration)
 
-        model = algorithm.fit(self.data)
-
-        if self.algorithm_name in Constants.rewrited:
+        if self.algorithm_name == Constants.fully_connected_pic:
+            self.current_labels = algorithm.fit_transform(self.data)
+        else:
+            model = algorithm.fit(self.data)
             predictions = model.transform(self.data)
             self.current_labels = predictions
-        else:
-            self.current_labels = model.labels_
 
     def clu_run(self, cfg):
         self.update_labels(cfg)
@@ -112,3 +119,20 @@ class ClusteringArmThread:
         distanceMeasure = CategoricalHyperparameter("distanceMeasure", ['euclidean', 'cosine'])
         minDivisibleClusterSize = UniformFloatHyperparameter("minDivisibleClusterSize", 0.01, 1.0)
         return k, maxIter, distanceMeasure, minDivisibleClusterSize
+
+    @staticmethod
+    def get_pic_configspace(n_clusters_upper_bound):
+        """
+        k : number of clusters
+        maxIter : max number of iterations (>= 0)
+        initMode : The initialization algorithm. This can be either 'random' to use a random vector as vertex
+        properties, or 'degree' to use a normalized sum of similarities with other vertices.
+        Supported options: 'random' and 'degree'.
+
+        Returns
+        -----------------
+        Tuple of parameters
+        """
+        k = UniformIntegerHyperparameter("k", 2, n_clusters_upper_bound)
+        maxIter = UniformIntegerHyperparameter("maxIter", 5, 50)
+        initMode = CategoricalHyperparameter("initMode", ['random', 'degree'])

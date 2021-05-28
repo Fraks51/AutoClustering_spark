@@ -13,6 +13,7 @@ class Constants:
     gm_algo = "Gaussian_Mixture"
     # bgm_algo = "Bayesian_Gaussian_Mixture"
     bisecting_kmeans = "BisectingKMeans"
+    fully_connected_pic = "Power Iteration Clusering"
 
     # num_algos = 3
     #
@@ -34,7 +35,8 @@ class Constants:
         # dbscan_algo,
         gm_algo,
         # bgm_algo
-        bisecting_kmeans
+        bisecting_kmeans,
+        fully_connected_pic
     ]
 
     # Metrica names can only consist of small english letters and dashes
@@ -107,7 +109,7 @@ class Constants:
         c_ind_metric  # 20
     ]
 
-    rewrited = [kmeans_algo, gm_algo, bisecting_kmeans]
+    rewrited = [kmeans_algo, gm_algo, bisecting_kmeans, fully_connected_pic]
 
     noisy = False
 
