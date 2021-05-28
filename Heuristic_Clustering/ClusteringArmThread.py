@@ -4,7 +4,7 @@ from ConfigSpace.hyperparameters import CategoricalHyperparameter, \
 from pyspark.ml.clustering import KMeans as KMeans_spark
 from pyspark.ml.clustering import GaussianMixture as GaussianMixture_spark
 from pyspark.ml.clustering import BisectingKMeans as BisectingKMeans_spark
-from .custom_algorithms import CustomPowerIterationClustering
+from .custom_algorithms.CustomPowerIterationClustering import CustomPowerIterationClustering
 
 from smac.configspace import ConfigurationSpace
 
