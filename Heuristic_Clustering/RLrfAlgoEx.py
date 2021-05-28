@@ -10,7 +10,7 @@ from .utils import print_log
 
 
 class RLrfAlgoEx:
-    clu_algos = Constants.algos
+    # clu_algos = Constants.algos
 
     def __init__(self, data, metric='sil', params=None, expansion=5000):
         self.metric = metric
@@ -21,6 +21,7 @@ class RLrfAlgoEx:
         self.best_labels = None
         self.best_algo = ""
         self.batch_size = params.batch_size
+        self.clu_algos = params.algorithms
         self.params = params
         self.same_res_counter = 0
         self.optimizers = []
