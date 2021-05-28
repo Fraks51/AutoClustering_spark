@@ -8,18 +8,18 @@ from pyspark.ml.clustering import PowerIterationClustering
 
 
 class CustomPowerIterationClustering:
-    def __init__(self, predictionCol='labels', **configuration):
+    def __init__(self, predictionCol='labels', dist_func=distance.euclidean, **configuration):
         self.algorithm = PowerIterationClustering(**configuration)
         self.predictionCol = predictionCol
-        self.dist_func = distance.euclidean
+        self.dist_func = dist_func
 
     def fit_transform(self, data):
         udffunc = udf(self.dist_func, FloatType())
-        res = data.select('features') \
+        indexed_data = data.select('features') \
             .withColumn('src', row_number().over(Window.orderBy(monotonically_increasing_id())))
-        res = res.join(res.toDF('features2', 'dst')) \
+        res = indexed_data.join(indexed_data.toDF('features2', 'dst')) \
             .filter("src < dst") \
-            .withColumn("weight", udffunc("features", "features2")) \
-            .drop('features', 'features2')
-        clustered_df = self.algorithm.assignClusters(res).withColumnRenamed('cluster', self.predictionCol)
-        return clustered_df
+            .withColumn("weight", udffunc("features", "features2"))
+
+        clustered_df = self.algorithm.assignClusters(res).withColumnRenamed('cluster', 'labels')
+        return clustered_df.join(indexed_data, clustered_df.id == indexed_data.src)
