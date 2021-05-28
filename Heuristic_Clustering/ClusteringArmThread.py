@@ -136,3 +136,4 @@ class ClusteringArmThread:
         k = UniformIntegerHyperparameter("k", 2, n_clusters_upper_bound)
         maxIter = UniformIntegerHyperparameter("maxIter", 5, 50)
         initMode = CategoricalHyperparameter("initMode", ['random', 'degree'])
+        return k, maxIter, initMode
