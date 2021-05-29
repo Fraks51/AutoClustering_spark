@@ -25,8 +25,9 @@ class ChIndex(Measure):
         rows, columns = spark_shape(data)
         n_clusters = get_n_clusters(data, data.columns[-1])
         columns -= 2
+        print(rows, columns, n_clusters)
+        data.show()
         mean_columns = map(lambda x: _mean(col(x)).alias('mean'), data.columns)
-        mean_columns.show()
         df_stats = data.select(
             *mean_columns
         ).collect()
