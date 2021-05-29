@@ -2,8 +2,8 @@ import numpy as np
 import math
 
 from pyspark.sql.functions import mean as _mean, col
-from metrics.utils import *
-from metrics.measure import Measure
+from utils import *
+from measure import Measure
 from pyspark import SparkContext, SQLContext
 
 
