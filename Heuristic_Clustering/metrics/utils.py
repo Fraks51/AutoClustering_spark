@@ -1,5 +1,5 @@
 import numpy as np
-from .spark_custom import *
+from metrics.spark_custom import *
 from pyspark.accumulators import AccumulatorParam
 
 
@@ -26,14 +26,14 @@ class NumpyAccumulatorParam(AccumulatorParam):
         return v1
 
 
-def cluster_centroid(data, slack_context, n_clusters): # data = data + labels
+def cluster_centroid(data, slack_context, n_clusters, added_columns): # data = data + labels
     rows, columns = spark_shape(data)
-    centroid = [slack_context.accumulator(columns - 2, NumpyAccumulatorParam()) for _ in range(n_clusters)]
+    centroid = [slack_context.accumulator(columns - added_columns, NumpyAccumulatorParam()) for _ in range(n_clusters)]
     num_points = [slack_context.accumulator(0) for _ in range(n_clusters)]
 
     def f(row, centroid, num_points):
-        c = row[-2]
-        centroid[c] += row[:-2]
+        c = row[-(added_columns - 1)]
+        centroid[c] += row[:-added_columns]
         num_points[c] += 1
 
     data.foreach(lambda row: f(row, centroid, num_points))
@@ -43,11 +43,14 @@ def cluster_centroid(data, slack_context, n_clusters): # data = data + labels
     return centroid
 
 
-def count_cluster_sizes(labels, n_clusters):
-    point_in_c = np.zeros(n_clusters)
-    for i in range(len(labels)):
-        point_in_c[labels[i]] += 1
-    return point_in_c
+def count_cluster_sizes(dataframe, n_clusters, spark_contexts, added_rows):
+    point_in_c = [spark_contexts.accumulator(0) for _ in range(n_clusters)]
+
+    def f(row, point_in_c):
+        point_in_c[row[-(added_rows - 1)]] += 1
+
+    dataframe.foreach(lambda row: f(row, point_in_c))
+    return list(map(lambda x: x.value, point_in_c))
 
 # not rewrite
 
@@ -56,14 +59,14 @@ def rotate(A, B, C):
     return (B[0]-A[0])*(C[1]-B[1])-(B[1]-A[1])*(C[0]-B[0])
 
 
-def update_centroids(centroid, num_points, point, k, l):
+def update_centroids(centroid, num_points, point, k, l, added_rows):
     for j, row_j in spark_iterator(point):
         centroid[k] *= (num_points[k] + 1)
-        centroid[k] -= row_j[:-2]
+        centroid[k] -= row_j[:-added_rows]
         if num_points[k] != 0:
             centroid[k] /= num_points[k]
         centroid[l] *= (num_points[l] - 1)
-        centroid[l] += row_j[:-2]
+        centroid[l] += row_j[:-added_rows]
         centroid[l] /= num_points[l]
     return centroid
 
@@ -106,9 +109,9 @@ class DiamAccumulatorParam(AccumulatorParam):
         return v1
 
 
-def find_diameter(data, spark_context):
+def find_diameter(data, spark_context, added_column):
     size, columns = spark_shape(data)
-    columns -= 2
+    columns -= added_column
     split_data = data.randomSplit([1000 / size, (1 - 1000 / size)])
     row_1, row_2 = np.zeros(columns), np.zeros(columns)
     max_diam = 0
@@ -116,18 +119,18 @@ def find_diameter(data, spark_context):
         for j, row_j in spark_iterator(split_data[0]):  # iterate inside cluster
             if j >= i:
                 break
-            dist = euclidian_dist(row_i[:-2], row_j[:-2])
+            dist = euclidian_dist(row_i[:-added_column], row_j[:-added_column])
             if dist > max_diam:
                 max_diam = dist
-                row_1 = row_i[:-2]
-                row_2 = row_j[:-2]
+                row_1 = row_i[:-added_column]
+                row_2 = row_j[:-added_column]
     acc = spark_context.accumulator({'row_1': np.array(row_1),
                                      'row_2': np.array(row_2),
                                      'dist': max_diam}
                                     , DiamAccumulatorParam())
 
     def f(row, acc):
-        acc += np.array(row[:-2])
+        acc += np.array(row[:-added_column])
 
     split_data[1].foreach(lambda row: f(row, acc))
     return acc.value['dist']

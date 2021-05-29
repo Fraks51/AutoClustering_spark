@@ -23,6 +23,15 @@ def spark_iterator(df):
         i += 1
 
 
+def get_n_clusters(df, label_column):
+    return df.groupBy(label_column).count().count()
+
+
+def add_iter(df):
+    df = df.withColumn("row_idx", row_number().over(Window.orderBy(monotonically_increasing_id())))
+    return df
+
+
 def spark_join(df, column, column_name, sql_context):
     b = sql_context.createDataFrame([(int(l),) for l in column], [column_name])
 
