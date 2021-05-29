@@ -57,6 +57,7 @@ class ClusteringArmThread:
 
     def clu_run(self, cfg):
         self.update_labels(cfg)
+        print(type(self.parameters), self.parameters)
         return Metric.metric(self.current_labels, self.parameters)
 
     @staticmethod
