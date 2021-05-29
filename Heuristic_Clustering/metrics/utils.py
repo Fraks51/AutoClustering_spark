@@ -60,13 +60,13 @@ def rotate(A, B, C):
 
 
 def update_centroids(centroid, num_points, point, k, l, added_rows):
-    for j, row_j in spark_iterator(point):
+    for j, row_j in spark_iterator(point, added_rows):
         centroid[k] *= (num_points[k] + 1)
-        centroid[k] -= row_j[:-added_rows]
+        centroid[k] -= row_j
         if num_points[k] != 0:
             centroid[k] /= num_points[k]
         centroid[l] *= (num_points[l] - 1)
-        centroid[l] += row_j[:-added_rows]
+        centroid[l] += row_j
         centroid[l] /= num_points[l]
     return centroid
 
@@ -115,15 +115,15 @@ def find_diameter(data, spark_context, added_column):
     split_data = data.randomSplit([1000 / size, (1 - 1000 / size)])
     row_1, row_2 = np.zeros(columns), np.zeros(columns)
     max_diam = 0
-    for i, row_i in spark_iterator(split_data[0]):  # iterate elements outside cluster
-        for j, row_j in spark_iterator(split_data[0]):  # iterate inside cluster
+    for i, row_i in spark_iterator(split_data[0], added_column):  # iterate elements outside cluster
+        for j, row_j in spark_iterator(split_data[0], added_column):  # iterate inside cluster
             if j >= i:
                 break
-            dist = euclidian_dist(row_i[:-added_column], row_j[:-added_column])
+            dist = euclidian_dist(row_i, row_j)
             if dist > max_diam:
                 max_diam = dist
-                row_1 = row_i[:-added_column]
-                row_2 = row_j[:-added_column]
+                row_1 = row_i
+                row_2 = row_j
     acc = spark_context.accumulator({'row_1': np.array(row_1),
                                      'row_2': np.array(row_2),
                                      'dist': max_diam}

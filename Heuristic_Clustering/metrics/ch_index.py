@@ -25,12 +25,12 @@ class ChIndex(Measure):
         rows, columns = spark_shape(data)
         n_clusters = get_n_clusters(data, data.columns[-1])
         columns -= 2
-        mean_columns = map(lambda x: _mean(col(x)).alias('mean'), data.columns)
+        mean_columns = map(lambda x: _mean(col(x)).alias('mean'), data.columns[:-2])
         df_stats = data.select(
             *mean_columns
         ).collect()
         df = add_iter(data)
-        self.x_center = np.array(df_stats[0][:-2])
+        self.x_center = np.array(df_stats[0])
         self.centroids = cluster_centroid(df, spark_context, n_clusters, 3)
         self.diameter = find_diameter(df, spark_context, 3)
         ch = float(rows - n_clusters) / float(n_clusters - 1)
@@ -77,4 +77,3 @@ class ChIndex(Measure):
         ch *= sum(self.numerator)
         ch /= self.denominator
         return -ch
-

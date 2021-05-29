@@ -16,10 +16,10 @@ class ListAccumulatorParam(AccumulatorParam):
         return v1
 
 
-def spark_iterator(df):
+def spark_iterator(df, added_column):
     i = 0
     for row in df.toLocalIterator():
-        yield i, np.array(row).astype(float)
+        yield i, np.array(row[:-added_column]).astype(float)
         i += 1
 
 
