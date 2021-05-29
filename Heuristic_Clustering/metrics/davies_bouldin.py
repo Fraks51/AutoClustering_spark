@@ -99,4 +99,3 @@ class DaviesIndex(Measure):
             db += tmp
         db /= float(n_clusters)
         return db
-

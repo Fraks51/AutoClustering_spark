@@ -1,5 +1,5 @@
 import numpy as np
-from what_if_.spark_custom import *
+from metrics.spark_custom import *
 from pyspark.accumulators import AccumulatorParam
 
 
@@ -134,4 +134,3 @@ def find_diameter(data, spark_context, added_column):
 
     split_data[1].foreach(lambda row: f(row, acc))
     return acc.value['dist']
-
