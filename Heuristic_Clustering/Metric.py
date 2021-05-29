@@ -1,12 +1,16 @@
 from py4j.protocol import Py4JJavaError
 from pyspark.ml.evaluation import ClusteringEvaluator
+from .metrics.ch_index import ChIndex
 import sys
 
 # TODO: change when more metrics arrived
 # TODO: delete prints when found where use metrics
-def metric(data, **kwargs):
+def metric(data, params):
     try:
-        res = -ClusteringEvaluator(predictionCol='labels', distanceMeasure='squaredEuclidean').evaluate(data)
+        if params.metric == 'sil':
+            res = -ClusteringEvaluator(predictionCol='labels', distanceMeasure='squaredEuclidean').evaluate(data)
+        elif params.metric == 'ch':
+            res = ChIndex().find(data, params.spark_context)
         return res
     except TypeError:
         print("\n\nTYPE ERROR OCCURED IN Metric.py:\n\nDATA: {}\n\n".format(data))

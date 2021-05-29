@@ -57,7 +57,7 @@ class ClusteringArmThread:
 
     def clu_run(self, cfg):
         self.update_labels(cfg)
-        return Metric.metric(self.current_labels)
+        return Metric.metric(self.current_labels, self.parameters)
 
     @staticmethod
     def get_kmeans_configspace(n_clusters_upper_bound):
