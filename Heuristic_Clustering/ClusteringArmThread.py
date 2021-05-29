@@ -21,7 +21,7 @@ class ClusteringArmThread:
         self.current_labels = None
         self.n_clusters_upper_bound = params.n_clusters_upper_bound
         self.value = Constants.bad_cluster
-        self.parameters = dict()
+        self.parameters = params
         self.configuration_space = ConfigurationSpace()
 
         if algorithm_name == Constants.kmeans_algo:
