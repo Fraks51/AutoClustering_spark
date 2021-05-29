@@ -26,6 +26,7 @@ class ChIndex(Measure):
         n_clusters = get_n_clusters(data, data.columns[-1])
         columns -= 2
         mean_columns = map(lambda x: _mean(col(x)).alias('mean'), data.columns)
+        mean_columns.show()
         df_stats = data.select(
             *mean_columns
         ).collect()
