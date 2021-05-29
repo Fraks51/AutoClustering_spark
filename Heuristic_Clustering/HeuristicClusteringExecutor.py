@@ -55,7 +55,7 @@ def run(spark_df, spark_context=None, metric='sil', output_file=None, batch_size
 
     params = Parameters(spark_context, algorithms=algorithms, n_clusters_upper_bound=max_clusters,
                         bandit_timeout=timeout, time_limit=time_limit, batch_size=batch_size, tau=tau,
-                        max_no_improvement_iterations=max_no_improvement_iterations)
+                        max_no_improvement_iterations=max_no_improvement_iterations, metric=metric)
 
     if not output_file is None:
         f = open(file=output_file, mode='w')
