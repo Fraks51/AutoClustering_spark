@@ -1,6 +1,6 @@
 from py4j.protocol import Py4JJavaError
 from pyspark.ml.evaluation import ClusteringEvaluator
-from metrics import ChIndex
+from .metrics import ChIndex
 import sys
 
 # TODO: change when more metrics arrived
