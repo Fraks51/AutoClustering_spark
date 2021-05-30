@@ -112,7 +112,10 @@ class DiamAccumulatorParam(AccumulatorParam):
 def find_diameter(data, spark_context, added_column):
     size, columns = spark_shape(data)
     columns -= added_column
-    split_data = data.randomSplit([1000 / size, (1 - 1000 / size)])
+    if size <= 1000:
+        split_data = data.randomSplit([0.25, 0.75])
+    else:
+        split_data = data.randomSplit([1000 / size, (1 - 1000 / size)])
     row_1, row_2 = np.zeros(columns), np.zeros(columns)
     max_diam = 0
     for i, row_i in spark_iterator(split_data[0], added_column):  # iterate elements outside cluster
