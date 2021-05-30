@@ -62,7 +62,11 @@ def run(spark_df, spark_context=None, metric='sil', output_file=None, batch_size
     else:
         f = None
 
-    spark_df = preprocess(spark_df)
+    # if dataset is OK - pass
+    try:
+        spark_df = preprocess(spark_df)
+    except:
+        pass
 
     # core part:
     # initializing multi-arm bandit solver:
