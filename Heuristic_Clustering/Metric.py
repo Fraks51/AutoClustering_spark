@@ -396,6 +396,7 @@ def metric(data, metric):
     # спарк упал, то пытаемся досчитать недосчитанное локально на одном узле
     try:
         spark_context = SparkSession.getActiveSession().sparkContext
+        SQLContext(spark_context).clearCache()
     except AttributeError:
         spark_context = SparkContext.getOrCreate(SparkConf().setMaster("local[*]"))
 
