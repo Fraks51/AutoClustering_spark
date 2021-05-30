@@ -392,13 +392,14 @@ class DaviesIndex(Measure):
 
 
 def metric(data, params):
+    print(params.metric)
     try:
         if params.metric == 'sil':
             res = -ClusteringEvaluator(predictionCol='labels', distanceMeasure='squaredEuclidean').evaluate(data)
         elif params.metric == 'ch':
             res = ChIndex().find(data, params.spark_context)
         elif params.metric == 'db':
-            res = DaviesIndex
+            res = DaviesIndex().find(data, params.spark_context)
         return res
     except TypeError:
         print("\n\nTYPE ERROR OCCURED IN Metric.py:\n\nDATA: {}\n\n".format(data))
