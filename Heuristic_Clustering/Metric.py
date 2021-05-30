@@ -7,7 +7,7 @@ import math
 
 from pyspark.sql.functions import monotonically_increasing_id, row_number
 from pyspark.sql.functions import mean as _mean, col
-from pyspark import SparkContext, SQLContext
+from pyspark import SparkContext, SQLContext, SparkConf
 from pyspark.sql import Window, SparkSession
 from pyspark.accumulators import AccumulatorParam
 from abc import abstractmethod, ABC
@@ -393,7 +393,15 @@ class DaviesIndex(Measure):
 
 def metric(data, metric):
     spark_context = SparkSession.getActiveSession().sparkContext
-    print(metric)
+    # Если по какой-то причине (случайно кто-то сломал сессию, пытаясь выполнить другую задачу и тд)
+    # спарк упал, то пытаемся досчитать недосчитанное локально на одном узле
+    if spark_context is None:
+        spark_context = SparkContext.getOrCreate(SparkConf().setMaster("local[*]"))
+
+        spark = SparkSession \
+            .builder \
+            .getOrCreate()
+    # print(metric)
     try:
         if metric == 'sil':
             res = -ClusteringEvaluator(predictionCol='labels', distanceMeasure='squaredEuclidean').evaluate(data)
