@@ -33,7 +33,7 @@ class UCB(MabSolver):
         self.action.data = self.action.data.withColumn('labels', round(rand()*self.params.n_clusters_upper_bound)\
                                                        .cast(IntegerType()))
 
-        res = Metric.metric(self.action.data, self.params)
+        res = Metric.metric(self.action.data, self.params.metric)
 
         # start = time.time()
         for i in range(0, self.params.num_algos):

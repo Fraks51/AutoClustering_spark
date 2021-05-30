@@ -49,7 +49,7 @@ class Softmax(MabSolver):
         print("\nInit Softmax with tau = " + str(self.tau))
         self.action.data = self.action.data.withColumn('labels', round(rand()*self.params.n_clusters_upper_bound)\
                                                        .cast(IntegerType()))
-        res = metric(self.action.data, self.params)
+        res = metric(self.action.data, self.params.metric)
         # start = time.time()
         for i in range(0, self.params.num_algos):
             self.rewards[i] = -res  # the smallest value is, the better.

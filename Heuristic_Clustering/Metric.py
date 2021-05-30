@@ -8,7 +8,7 @@ import math
 from pyspark.sql.functions import monotonically_increasing_id, row_number
 from pyspark.sql.functions import mean as _mean, col
 from pyspark import SparkContext, SQLContext
-from pyspark.sql import Window
+from pyspark.sql import Window, SparkSession
 from pyspark.accumulators import AccumulatorParam
 from abc import abstractmethod, ABC
 
@@ -391,15 +391,16 @@ class DaviesIndex(Measure):
         return db
 
 
-def metric(data, params):
-    print(params.metric)
+def metric(data, metric):
+    spark_context = SparkSession.getActiveSession().sparkContext
+    print(metric)
     try:
-        if params.metric == 'sil':
+        if metric == 'sil':
             res = -ClusteringEvaluator(predictionCol='labels', distanceMeasure='squaredEuclidean').evaluate(data)
-        elif params.metric == 'ch':
-            res = ChIndex().find(data, params.spark_context)
-        elif params.metric == 'db':
-            res = DaviesIndex().find(data, params.spark_context)
+        elif metric == 'ch':
+            res = ChIndex().find(data, spark_context)
+        elif metric == 'db':
+            res = DaviesIndex().find(data, spark_context)
         return res
     except TypeError:
         print("\n\nTYPE ERROR OCCURED IN Metric.py:\n\nDATA: {}\n\n".format(data))
