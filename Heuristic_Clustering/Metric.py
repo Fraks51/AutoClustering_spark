@@ -108,7 +108,7 @@ def cluster_centroid(data, slack_context, n_clusters, added_columns):  # data = 
         c = row[-(added_columns - 1)]
         centroid[c] += row[:-added_columns]
         num_points[c] += 1
-    print(f(data.head(), centroid, num_points))
+    # print(f(data.head(), centroid, num_points))
     data.rdd.foreach(lambda row: f(row, centroid, num_points))
     centroid = list(map(lambda x: x.value, centroid))
     for i in range(0, n_clusters):

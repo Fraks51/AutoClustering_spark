@@ -53,7 +53,7 @@ def run(spark_df, spark_context=None, metric='sil', output_file=None, batch_size
     if spark_context is None:
         spark_context = SparkContext.getOrCreate(SparkConf().setMaster("local[*]"))
 
-    spark_context.addPyFile("./Metric.py")
+    # spark_context.addPyFile("./Metric.py")
 
     params = Parameters(spark_context, algorithms=algorithms, n_clusters_upper_bound=max_clusters,
                         bandit_timeout=timeout, time_limit=time_limit, batch_size=batch_size, tau=tau,
