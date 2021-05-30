@@ -99,7 +99,7 @@ class NumpyAccumulatorParam(AccumulatorParam):
         return v1
 
 
-def cluster_centroid(data, slack_context, n_clusters, added_columns): # data = data + labels
+def cluster_centroid(data, slack_context, n_clusters, added_columns):  # data = data + labels
     rows, columns = spark_shape(data)
     centroid = [slack_context.accumulator(columns - added_columns, NumpyAccumulatorParam()) for _ in range(n_clusters)]
     num_points = [slack_context.accumulator(0) for _ in range(n_clusters)]
@@ -109,7 +109,7 @@ def cluster_centroid(data, slack_context, n_clusters, added_columns): # data = d
         centroid[c] += row[:-added_columns]
         num_points[c] += 1
 
-    data.foreach(lambda row: f(row, centroid, num_points))
+    data.rdd.foreach(lambda row: f(row, centroid, num_points))
     centroid = list(map(lambda x: x.value, centroid))
     for i in range(0, n_clusters):
         centroid[i] /= num_points[i].value
@@ -122,14 +122,15 @@ def count_cluster_sizes(dataframe, n_clusters, spark_contexts, added_rows):
     def f(row, point_in_c):
         point_in_c[row[-(added_rows - 1)]] += 1
 
-    dataframe.foreach(lambda row: f(row, point_in_c))
+    dataframe.rdd.foreach(lambda row: f(row, point_in_c))
     return list(map(lambda x: x.value, point_in_c))
+
 
 # not rewrite
 
 
 def rotate(A, B, C):
-    return (B[0]-A[0])*(C[1]-B[1])-(B[1]-A[1])*(C[0]-B[0])
+    return (B[0] - A[0]) * (C[1] - B[1]) - (B[1] - A[1]) * (C[0] - B[0])
 
 
 def update_centroids(centroid, num_points, point, k, l, added_rows):
@@ -208,7 +209,7 @@ def find_diameter(data, spark_context, added_column):
     def f(row, acc):
         acc += np.array(row[:-added_column])
 
-    split_data[1].foreach(lambda row: f(row, acc))
+    split_data[1].rdd.foreach(lambda row: f(row, acc))
     return acc.value['dist']
 
 
@@ -225,6 +226,10 @@ class ChIndex(Measure):
         self.numerator = none_check(numerator)
         self.denominator = none_check(denominator)
         self.diameter = diameter
+
+    @staticmethod
+    def f(row, acc, centroid):
+        acc += 1
 
     def find(self, data, spark_context):
         rows, columns = spark_shape(data)
@@ -243,13 +248,21 @@ class ChIndex(Measure):
         self.cluster_sizes = count_cluster_sizes(df, n_clusters, spark_context, 3)
         self.numerator = [0 for _ in range(n_clusters)]
         for i in range(0, n_clusters):
-             self.numerator[i] = self.cluster_sizes[i] * euclidian_dist(self.centroids[i], self.x_center)
+            self.numerator[i] = self.cluster_sizes[i] * euclidian_dist(self.centroids[i], self.x_center)
         denominator_sum = spark_context.accumulator(0)
 
-        def f(row, acc, centroid):
-            acc += euclidian_dist(row[:-3], centroid[row[-2]])
+        # def f(row, acc, centroid):
+        #     acc += euclidian_dist(row[:-3], centroid[row[-2]])
+        # df.rdd.foreach(lambda row: f(row, denominator_sum, self.centroids))
 
-        df.foreach(lambda row: f(row, denominator_sum, self.centroids))
+        def f(row, denominator_sum, centroind):
+            denominator_sum += np.sqrt(np.sum(
+                np.square(np.array(row[:-3]) - centroind[row[-2]])))
+
+        centroind = self.centroids
+
+        df.rdd.foreach(lambda row: f(row, denominator_sum, centroind))
+
         self.denominator = denominator_sum.value
         ch *= np.sum(self.numerator)
         ch /= self.denominator
@@ -273,11 +286,11 @@ class ChIndex(Measure):
 
         def f(k, l, prev_centroids, centroids, delta, diameter, row, denom):
             if (row[-2] == k and euclidian_dist(prev_centroids[k], centroids[k]) > delta * diameter
-               or row[-2] == l and euclidian_dist(prev_centroids[l], centroids[l]) > delta * diameter):
+                    or row[-2] == l and euclidian_dist(prev_centroids[l], centroids[l]) > delta * diameter):
                 denom += (euclidian_dist(row[:-3], centroids[row[-2]])
-                                     - euclidian_dist(row[:-3], prev_centroids[row[-2]]))
+                          - euclidian_dist(row[:-3], prev_centroids[row[-2]]))
 
-        df.foreach(lambda row: f(k, l, prev_centroids, self.centroids, delta, self.diameter, row, denom))
+        df.rdd.foreach(lambda row: f(k, l, prev_centroids, self.centroids, delta, self.diameter, row, denom))
         self.denominator += denom.value
         ch *= sum(self.numerator)
         ch /= self.denominator
@@ -300,7 +313,7 @@ class DaviesIndex(Measure):
             if row[-2] == cluster_k_index:
                 acc += euclidian_dist(row[:-3], centroids[cluster_k_index])
 
-        X.foreach(lambda row: f(row, acc, centroids))
+        X.rdd.foreach(lambda row: f(row, acc, centroids))
 
         if cluster_sizes[cluster_k_index] == 0:
             return float('inf')
@@ -319,7 +332,7 @@ class DaviesIndex(Measure):
             label = row[-1]
             cluster_dists[label] += euclidian_dist(row[:-2], centroids[label])
 
-        data.foreach(lambda row: f(row, cluster_dists, self.centroids))
+        data.rdd.foreach(lambda row: f(row, cluster_dists, self.centroids))
 
         for i in range(n_clusters):
             if self.cluster_sizes[i] == 0:
@@ -335,7 +348,7 @@ class DaviesIndex(Measure):
                         self.sums[i][j] = (self.s_clusters[i] + self.s_clusters[j]) / tm
                     else:
                         pass
-                        #a = -Constants.bad_cluster
+                        # a = -Constants.bad_cluster
             tmp = np.amax(self.sums[i])
             db += tmp
         db /= float(n_clusters)
@@ -378,15 +391,14 @@ class DaviesIndex(Measure):
         return db
 
 
-
-# TODO: change when more metrics arrived
-# TODO: delete prints when found where use metrics
 def metric(data, params):
     try:
         if params.metric == 'sil':
             res = -ClusteringEvaluator(predictionCol='labels', distanceMeasure='squaredEuclidean').evaluate(data)
         elif params.metric == 'ch':
             res = ChIndex().find(data, params.spark_context)
+        elif params.metric == 'db':
+            res = DaviesIndex
         return res
     except TypeError:
         print("\n\nTYPE ERROR OCCURED IN Metric.py:\n\nDATA: {}\n\n".format(data))

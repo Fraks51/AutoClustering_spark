@@ -10,10 +10,10 @@ class Constants:
     # mean_shift_algo = "Mean_Shift"
     # ward_algo = "Ward"
     # dbscan_algo = "DBSCAN"
-    gm_algo = "Gaussian_Mixture"
+    gm_algo = "GaussianMixture"
     # bgm_algo = "Bayesian_Gaussian_Mixture"
     bisecting_kmeans = "BisectingKMeans"
-    fully_connected_pic = "Power Iteration Clusering"
+    fully_connected_pic = "PowerIterationClusering"
 
     # num_algos = 3
     #
