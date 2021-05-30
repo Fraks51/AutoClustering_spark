@@ -404,6 +404,7 @@ def metric(data, metric):
             .builder \
             .getOrCreate()
 
+    data = data.drop('probability')
     try:
         if metric == 'sil':
             res = -ClusteringEvaluator(predictionCol='labels', distanceMeasure='squaredEuclidean').evaluate(data)
