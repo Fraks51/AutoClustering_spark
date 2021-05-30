@@ -392,16 +392,17 @@ class DaviesIndex(Measure):
 
 
 def metric(data, metric):
-    spark_context = SparkSession.getActiveSession().sparkContext
     # Если по какой-то причине (случайно кто-то сломал сессию, пытаясь выполнить другую задачу и тд)
     # спарк упал, то пытаемся досчитать недосчитанное локально на одном узле
-    if spark_context is None:
+    try:
+        spark_context = SparkSession.getActiveSession().sparkContext
+    except AttributeError:
         spark_context = SparkContext.getOrCreate(SparkConf().setMaster("local[*]"))
 
         spark = SparkSession \
             .builder \
             .getOrCreate()
-    # print(metric)
+
     try:
         if metric == 'sil':
             res = -ClusteringEvaluator(predictionCol='labels', distanceMeasure='squaredEuclidean').evaluate(data)
