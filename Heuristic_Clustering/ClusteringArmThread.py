@@ -21,7 +21,7 @@ class ClusteringArmThread:
         self.current_labels = None
         self.n_clusters_upper_bound = params.n_clusters_upper_bound
         self.value = Constants.bad_cluster
-        self.params = params
+        self.parameters = params
         self.configuration_space = ConfigurationSpace()
 
         if algorithm_name == Constants.kmeans_algo:
@@ -57,8 +57,8 @@ class ClusteringArmThread:
 
     def clu_run(self, cfg):
         self.update_labels(cfg)
-        print(type(self.parameters), self.parameters)
-        return Metric.metric(self.current_labels, self.params)
+        # print(type(self.parameters), self.parameters)
+        return Metric.metric(self.current_labels, self.metric)
 
     @staticmethod
     def get_kmeans_configspace(n_clusters_upper_bound):
