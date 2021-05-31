@@ -416,6 +416,6 @@ def metric(data, metric):
     except TypeError:
         print("\n\nTYPE ERROR OCCURED IN Metric.py:\n\nDATA: {}\n\n".format(data))
         return 0
-    # except Py4JJavaError:
-    #     print("\n\nPy4JJavaError ERROR OCCURED IN Metric.py:\n\nDATA: {}\n\n".format(data.printSchema()))
-    #     return sys.float_info.max
+    except Py4JJavaError:
+        print("\n\nPy4JJavaError ERROR OCCURED IN Metric.py:\n\nDATA: {}\n\n".format(data.printSchema()))
+        return sys.float_info.max
