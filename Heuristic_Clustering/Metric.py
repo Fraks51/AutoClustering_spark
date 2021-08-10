@@ -54,7 +54,7 @@ def spark_iterator(df, added_column):
 
 
 def get_n_clusters(df, label_column):
-    return df.groupBy(label_column).count().count()
+    return df.groupBy('labels').count().count()
 
 
 def add_iter(df):
@@ -251,17 +251,11 @@ class ChIndex(Measure):
             self.numerator[i] = self.cluster_sizes[i] * euclidian_dist(self.centroids[i], self.x_center)
         denominator_sum = spark_context.accumulator(0)
 
-        # def f(row, acc, centroid):
-        #     acc += euclidian_dist(row[:-3], centroid[row[-2]])
-        # df.rdd.foreach(lambda row: f(row, denominator_sum, self.centroids))
-
         def f(row, denominator_sum, centroind):
             denominator_sum += np.sqrt(np.sum(
                 np.square(np.array(row[:-3]) - centroind[row[-2]])))
 
-        centroind = self.centroids
-
-        df.rdd.foreach(lambda row: f(row, denominator_sum, centroind))
+        df.rdd.foreach(lambda row: f(row, denominator_sum, self.centroids))
 
         self.denominator = denominator_sum.value
         ch *= np.sum(self.numerator)

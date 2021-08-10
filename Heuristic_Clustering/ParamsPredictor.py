@@ -15,7 +15,7 @@ from smac.tae import StatusType
 from smac.tae.execute_ta_run_old import ExecuteTARunOld
 
 
-class RFRS(object):
+class ParamsPredictor(object):
     def __init__(self,
                  scenario: Scenario,
                  tae_runner: typing.Union[ExecuteTARunOld, typing.Callable],

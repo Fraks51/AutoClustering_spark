@@ -5,7 +5,7 @@ import numpy as np
 from pyspark import SparkContext, SparkConf
 
 from .Constants import Constants
-from .RLrfAlgoEx import RLrfAlgoEx
+from .RLOptimizerExecutor import RLOptimizerExecutor
 from .mab_solvers.UCB_SRSU import UCBsrsu
 from .mab_solvers.Softmax import Softmax
 from .utils import debugging_printer, preprocess, print_log
@@ -18,7 +18,7 @@ def configure_mab_solver(data, metric, algorithm, params):
     Creates and configures the corresponding MAB-solver.
     :param algorithm: algorithm to be used.
     """
-    algorithm_executor = RLrfAlgoEx(data=data, metric=metric, params=params, expansion=100)
+    algorithm_executor = RLOptimizerExecutor(data=data, metric=metric, params=params, expansion=100)
     if algorithm=='ucb':
         mab_solver = UCBsrsu(action=algorithm_executor, params=params)
     elif algorithm=='softmax':

@@ -6,7 +6,6 @@ from pyspark.sql.types import IntegerType
 
 import Metric
 from mab_solvers.MabSolver import MabSolver
-from utils import debugging_printer
 
 
 class UCB(MabSolver):
@@ -14,8 +13,6 @@ class UCB(MabSolver):
         MabSolver.__init__(self, action, params)
         self.num_algos = params.num_algos
         self.rewards = np.zeros(params.num_algos)
-        # self.spendings = [[] for i in range(0, self.num)]
-        # self.avg_spendings = [1] * Constants.num_algos
         self.n = np.array([1] * self.num_algos)
         self.name = "ucb"
         self.iter = 1
@@ -26,8 +23,6 @@ class UCB(MabSolver):
         Initialize rewards. We use here the same value,
         gained by calculating metrics on randomly assigned labels.
         """
-        print("\nInit UCB1")
-        # print("\nparams.batch_size : {}".format(self.params.batch_size))
 
         # Random initialization of cluster labels
         self.action.data = self.action.data.withColumn('labels', round(rand()*self.params.n_clusters_upper_bound)\
@@ -35,10 +30,8 @@ class UCB(MabSolver):
 
         res = Metric.metric(self.action.data, self.params.metric)
 
-        # start = time.time()
         for i in range(0, self.params.num_algos):
             self.rewards[i] = -res  # the smallest value is, the better.
-        # self.consume_limit(time.time() - start)
         log_file.write("Init rewards: " + str(self.rewards) + '\n')
 
     def draw(self):

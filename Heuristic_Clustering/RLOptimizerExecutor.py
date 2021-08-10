@@ -9,7 +9,7 @@ from .RLthreadRFRS import RLthreadRFRS
 from .utils import print_log
 
 
-class RLrfAlgoEx:
+class RLOptimizerExecutor:
     # clu_algos = Constants.algos
 
     def __init__(self, data, metric='sil', params=None, expansion=5000):

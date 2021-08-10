@@ -1,7 +1,7 @@
 from pyspark.sql.dataframe import DataFrame
 
 from ClusteringArmThread import ClusteringArmThread
-from RFRS import RFRS
+from ParamsPredictor import ParamsPredictor
 from smac.scenario.scenario import Scenario
 
 
@@ -13,10 +13,10 @@ class RLthreadRFRS(ClusteringArmThread):
                                      params=params)  # populates config space
         self.new_scenario(1)  # initial scenario
 
-        self.optimizer = RFRS(scenario=self.clu_scenario,
-                              tae_runner=self.clu_run,
-                              expansion_number=expansion,
-                              batch_size=batch_size)
+        self.optimizer = ParamsPredictor(scenario=self.clu_scenario,
+                                         tae_runner=self.clu_run,
+                                         expansion_number=expansion,
+                                         batch_size=batch_size)
 
     def new_scenario(self, c, remaining_time=None):
         # remaining_time is usually expected to be way more than needed for one call,

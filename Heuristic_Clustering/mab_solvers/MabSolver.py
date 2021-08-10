@@ -4,6 +4,7 @@ import time
 
 import numpy as np
 
+
 class TL:
     def __init__(self, time_limit):
         self.time_remaining = time_limit
@@ -66,7 +67,7 @@ class MabSolver(TL):
         start = time.time()
         its = 0
         while not self.is_limit_exceeded():
-            reward = self.iteration(its, log_file, int(time.time()-start))
+            reward = self.iteration(its, log_file, int(time.time() - start))
             its += 1
             if reward is None:
                 break
